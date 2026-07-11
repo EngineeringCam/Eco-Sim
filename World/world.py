@@ -5,7 +5,8 @@ from utils import in_vision_cone
 from agents import Plant, Prey, Predator
 from settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, PLANT_COUNT, PREY_COUNT, PREDATOR_COUNT, EAT_RADIUS, PLANT_ENERGY,
-    PREY_REPRODUCE_THRESHOLD, PREDATOR_REPRODUCE_THRESHOLD, MOVEMENT_COST, SHOW_VISION_CONES
+    PREY_REPRODUCTION_AGE, PREY_REPRODUCTION_TIME, PREDATOR_REPRODUCTION_AGE, PREDATOR_REPRODUCTION_TIME,
+    MOVEMENT_COST, SHOW_VISION_CONES
 )
 from utils import distance, clamp
 
@@ -143,29 +144,37 @@ class World:
     def handle_reproduction_and_death(self):
         # Prey reproduction and death
         for prey in list(self.prey):
+            prey.age += 1
+            prey.reproduceTimer += 1
             if prey.energy <= 0:
                 try:
                     self.prey.remove(prey)
                 except ValueError:
                     pass
                 continue
-            if prey.energy >= PREY_REPRODUCE_THRESHOLD:
-                prey.energy //= 2
-                child = Prey(prey.x + random.randint(-5, 5), prey.y + random.randint(-5, 5))
-                self.prey.append(child)
+            if prey.age >= PREY_REPRODUCTION_AGE:
+                if prey.reproduceTimer >= PREY_REPRODUCTION_TIME:
+                    prey.energy //= 2
+                    child = Prey(prey.x + random.randint(-5, 5), prey.y + random.randint(-5, 5))
+                    self.prey.append(child)
+                    prey.reproduceTimer = 0
 
         # Predator reproduction and death
         for predator in list(self.predators):
+            predator.age += 1
+            predator.reproduceTimer += 1
             if predator.energy <= 0:
                 try:
                     self.predators.remove(predator)
                 except ValueError:
                     pass
                 continue
-            if predator.energy >= PREDATOR_REPRODUCE_THRESHOLD:
-                predator.energy //= 2
-                child = Predator(predator.x + random.randint(-5, 5), predator.y + random.randint(-5, 5))
-                self.predators.append(child)
+            if predator.age >= PREDATOR_REPRODUCTION_AGE:
+                if predator.reproduceTimer >= PREDATOR_REPRODUCTION_TIME:
+                    predator.energy //= 2
+                    child = Predator(predator.x + random.randint(-5, 5), predator.y + random.randint(-5, 5))
+                    self.predators.append(child)
+                    predator.reproduceTimer = 0
 
     def spawn_plant(self):
         # add one plant at random Location
