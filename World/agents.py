@@ -37,12 +37,12 @@ class Agent:
 
 # Using PredatorAgent for now, even though it is not a predator. Change later.
 class Plant(Agent):
-    def __init__(self, x, y, age=0, reproduceTimer=0):
+    def __init__(self, x, y):
         super().__init__(x, y, age=0, reproduceTimer=0)
         self.cos_half_vision = math.cos(self.vision_angle / 2)
 
 class Prey(Agent):
-    def __init__(self, x, y, age=0, reproduceTimer=0):
+    def __init__(self, x, y):
         super().__init__(x, y, age=0, reproduceTimer=0)
         self.energy = PREY_ENERGY_START
 
@@ -54,7 +54,7 @@ class Prey(Agent):
         self.cos_half_vision = math.cos(self.vision_angle / 2)
 
 class Predator(Agent):
-    def __init__(self, x, y, age=0, reproduceTimer=0):
+    def __init__(self, x, y):
         super().__init__(x, y, age=0, reproduceTimer=0)
         self.energy = PREDATOR_ENERGY_START
 

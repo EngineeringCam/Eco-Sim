@@ -111,9 +111,6 @@ class World:
             c.x = clamp(c.x, 0, SCREEN_WIDTH - 1)
             c.y = clamp(c.y, 0, SCREEN_HEIGHT - 1)
 
-    #def turn_to_target(target, c)
-     #   dx
-
     def handle_eating(self):
         # Prey eat plants
         for prey in list(self.prey):
