@@ -6,7 +6,7 @@ from agents import Plant, Prey, Predator
 from settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, PLANT_COUNT, PREY_COUNT, PREDATOR_COUNT, EAT_RADIUS, PLANT_ENERGY,
     PREY_REPRODUCTION_AGE, PREY_REPRODUCTION_TIME, PREDATOR_REPRODUCTION_AGE, PREDATOR_REPRODUCTION_TIME,
-    MOVEMENT_COST, SHOW_VISION_CONES
+    MOVEMENT_COST, SHOW_VISION_CONES, FLEE_TIME
 )
 from utils import distance, clamp
 
@@ -42,6 +42,7 @@ class World:
         self.tick_count += 1
         self.move_agents()
         self.handle_eating()
+        #self.handle_fleeing()
         self.handle_reproduction_and_death()
 
         # occasional plant regrowth
@@ -137,6 +138,53 @@ class World:
                     except ValueError:
                         pass
                     break
+    
+    def handle_fleeing(self):
+        # Prey flee from predators
+        for prey in self.prey:
+
+            # If prey is already fleeing, continue fleeing
+            if prey.flee_timer > 0:
+                prey.flee_timer -= 1
+
+                # Move directly away from the predator
+                dx = prey.x - prey.flee_from.x
+                dy = prey.y - prey.flee_from.y
+
+                dist = math.hypot(dx, dy)
+
+                if dist > 0:
+                    prey.facing = [dx / dist, dy / dist]
+
+                    continue  # Skip the rest of the loop to keep fleeing
+
+            # If prey is not fleeing, check for predators in vision cone / Look for predators
+            aggitator = None
+            closest_dist = float("inf")
+
+            for predator in self.predators:
+                # Check if predator is in prey's vision cone
+                if in_vision_cone(prey, predator):
+                    # Check which predator in vision cone is closest
+                    d = distance(prey, predator)
+                    if d < closest_dist:
+                        closest_dist = d
+                        aggitator = predator
+
+            # If predator is found in vision cone, set flee timer and move away from predator
+            if aggitator:
+                # Set timer for how long prey will flee
+                prey.flee_timer = FLEE_TIME
+                prey.flee_from = aggitator
+
+                # Immediately turn away from predator
+                dx = prey.x - aggitator.x
+                dy = prey.y - aggitator.y
+
+                dist = math.hypot(dx, dy)
+
+                if dist > 0:
+                    prey.facing = [dx / dist, dy / dist]
 
     def handle_reproduction_and_death(self):
         # Prey reproduction and death

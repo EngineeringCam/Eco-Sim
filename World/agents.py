@@ -49,6 +49,8 @@ class Prey(Agent):
         self.vision_distance = 80
         self.vision_angle = 3 * math.pi / 2 # 270 degrees
         self.speed = 2
+        self.flee_timer = 0
+        self.flee_from = None
 
         isinstance(Agent, Prey)
         self.cos_half_vision = math.cos(self.vision_angle / 2)
