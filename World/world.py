@@ -6,7 +6,7 @@ from agents import Plant, Prey, Predator
 from settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, PLANT_COUNT, PREY_COUNT, PREDATOR_COUNT, EAT_RADIUS, PLANT_ENERGY,
     PREY_REPRODUCTION_AGE, PREY_REPRODUCTION_TIME, PREDATOR_REPRODUCTION_AGE, PREDATOR_REPRODUCTION_TIME,
-    MOVEMENT_COST, SHOW_VISION_CONES, FLEE_TIME
+    MOVEMENT_COST, SHOW_VISION_CONES, FLEE_TIMER
 )
 from utils import distance, clamp
 
@@ -40,9 +40,9 @@ class World:
 
     def update(self):
         self.tick_count += 1
+        self.handle_fleeing()
         self.move_agents()
         self.handle_eating()
-        #self.handle_fleeing()
         self.handle_reproduction_and_death()
 
         # occasional plant regrowth
@@ -52,25 +52,30 @@ class World:
     def move_agents(self):
         #Prey move
         for c in self.prey:
-            target = None
-            closest_dist = float("inf")
-
-            for plant in self.plants:
-                if in_vision_cone(c, plant):
-                    d = distance(c, plant)
-                    if d < closest_dist:
-                        closest_dist = d
-                        target = plant
-
-            if target:
-                # turn toward target
-                dx = target.x - c.x
-                dy = target.y - c.y
-                dist = math.hypot(dx, dy)
-                if dist > 0:
-                    c.facing = [dx / dist, dy / dist]
+            if c.flee_timer > 0:
+                # already fleeing.
+                # Don't Look for food.
+                pass
             else:
-                c.move_random()
+                target = None
+                closest_dist = float("inf")
+    
+                for plant in self.plants:
+                    if in_vision_cone(c, plant):
+                        d = distance(c, plant)
+                        if d < closest_dist:
+                            closest_dist = d
+                            target = plant
+    
+                if target:
+                    # turn toward target
+                    dx = target.x - c.x
+                    dy = target.y - c.y
+                    dist = math.hypot(dx, dy)
+                    if dist > 0:
+                        c.facing = [dx / dist, dy / dist]
+                else:
+                    c.move_random()
 
             c.x += c.facing[0] * c.speed
             c.y += c.facing[1] * c.speed
@@ -174,7 +179,7 @@ class World:
             # If predator is found in vision cone, set flee timer and move away from predator
             if aggitator:
                 # Set timer for how long prey will flee
-                prey.flee_timer = FLEE_TIME
+                prey.flee_timer = FLEE_TIMER
                 prey.flee_from = aggitator
 
                 # Immediately turn away from predator
