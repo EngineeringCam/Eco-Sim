@@ -8,7 +8,7 @@ from utils import distance
 class main():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Simple Ecosystem")
+    pygame.display.set_caption("Ecosystem")
     clock = pygame.time.Clock()
 
     world = World()
@@ -49,17 +49,4 @@ class main():
 
     if __name__ == "__main__":
         main()
-
-#    def __init__(self, x, y):
-#        while running:
-#            handle_input()
-#            update_world()
-#            draw_world()
-#            clock.tick(60)
-#
-#pygame.init()
-#screen = pygame.display.set_mode((800, 600))
-#clock = pygame.time.Clock()
-#
-#def draw_agent(agent, color, radius):
-#    pygame.draw.circle(screen, color, (agent.x, agent.y), radius)
+        

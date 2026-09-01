@@ -1,7 +1,7 @@
 import random
 import pygame
 import math
-from utils import in_vision_cone
+from utils import in_vision_cone, handle_turning
 from agents import Plant, Prey, Predator
 from settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, PLANT_COUNT, PREY_COUNT, PREDATOR_COUNT, EAT_RADIUS, PLANT_ENERGY,
@@ -30,6 +30,7 @@ class World:
         self.predators = []
         self.tick_count = 0
 
+
     def populate(self):
         for _ in range(PLANT_COUNT):
             self.plants.append(Plant(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT)))
@@ -37,6 +38,7 @@ class World:
             self.prey.append(Prey(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT)))
         for _ in range(PREDATOR_COUNT):
             self.predators.append(Predator(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT)))
+
 
     def update(self):
         self.tick_count += 1
@@ -49,6 +51,7 @@ class World:
         if self.tick_count % 5 == 0:
             self.spawn_plant()
 
+
     def move_agents(self):
         #Prey move
         for c in self.prey:
@@ -57,23 +60,12 @@ class World:
                 # Don't Look for food.
                 pass
             else:
-                target = None
-                closest_dist = float("inf")
     
-                for plant in self.plants:
-                    if in_vision_cone(c, plant):
-                        d = distance(c, plant)
-                        if d < closest_dist:
-                            closest_dist = d
-                            target = plant
+                target = self.find_closest_visible(c, self.plants)
     
                 if target:
                     # turn toward target
-                    dx = target.x - c.x
-                    dy = target.y - c.y
-                    dist = math.hypot(dx, dy)
-                    if dist > 0:
-                        c.facing = [dx / dist, dy / dist]
+                    handle_turning(c, target)
                 else:
                     c.move_random()
 
@@ -89,23 +81,12 @@ class World:
 
         # Predators move
         for c in self.predators:
-            target = None
-            closest_dist = float("inf")
 
-            for prey in self.prey:
-                if in_vision_cone(c, prey):
-                    d = distance(c, prey)
-                    if d < closest_dist:
-                        closest_dist = d
-                        target = prey
+            target = self.find_closest_visible(c, self.prey)
 
             if target:
                 # turn toward target
-                dx = target.x - c.x
-                dy = target.y - c.y
-                dist = math.hypot(dx, dy)
-                if dist > 0:
-                    c.facing = [dx / dist, dy / dist]
+                handle_turning(c, target)
             else:
                 # wander if nothing seen
                 c.move_random()
@@ -116,6 +97,7 @@ class World:
 
             c.x = clamp(c.x, 0, SCREEN_WIDTH - 1)
             c.y = clamp(c.y, 0, SCREEN_HEIGHT - 1)
+
 
     def handle_eating(self):
         # Prey eat plants
@@ -143,6 +125,7 @@ class World:
                     except ValueError:
                         pass
                     break
+
     
     def handle_fleeing(self):
         # Prey flee from predators
@@ -161,7 +144,7 @@ class World:
                 if dist > 0:
                     prey.facing = [dx / dist, dy / dist]
 
-                    continue  # Skip the rest of the loop to keep fleeing
+                continue  # Skip the rest of the loop to keep fleeing
 
             # If prey is not fleeing, check for predators in vision cone / Look for predators
             aggitator = None
@@ -190,6 +173,7 @@ class World:
 
                 if dist > 0:
                     prey.facing = [dx / dist, dy / dist]
+
 
     def handle_reproduction_and_death(self):
         # Prey reproduction and death
@@ -226,9 +210,25 @@ class World:
                     self.predators.append(child)
                     predator.reproduceTimer = 0
 
+    def find_closest_visible(self, agent, candidates):
+        target = None
+        closest_dist = float("inf")
+
+        for candidate in candidates:
+            if in_vision_cone(agent, candidate):
+                d = distance(agent, candidate)
+
+                if d < closest_dist:
+                    closest_dist = d
+                    target = candidate
+
+        return target
+    
+
     def spawn_plant(self):
         # add one plant at random Location
         self.plants.append(Plant(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT)))
+
 
     def draw(self, screen):
         # draw plants
