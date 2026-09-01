@@ -140,10 +140,10 @@ class World:
         for prey in list(self.prey):
             prey.age += 1
             prey.reproduceTimer += 1
-
+    
             if die(prey, self.prey):
                 continue
-
+            
             reproduce(
                 prey,
                 self.prey,
@@ -151,22 +151,22 @@ class World:
                 PREY_REPRODUCTION_TIME,
                 Prey
             )
-
-            # Predator reproduction and death
-            for predator in list(self.predators):
-                predator.age += 1
-                predator.reproduceTimer += 1
-
-                if die(predator, self.predators):
-                    continue
-
-                reproduce(
-                    predator,
-                    self.predators,
-                    PREDATOR_REPRODUCTION_AGE,
-                    PREDATOR_REPRODUCTION_TIME,
-                    Predator
-                )
+    
+        # Predator reproduction and death
+        for predator in list(self.predators):
+            predator.age += 1
+            predator.reproduceTimer += 1
+    
+            if die(predator, self.predators):
+                continue
+            
+            reproduce(
+                predator,
+                self.predators,
+                PREDATOR_REPRODUCTION_AGE,
+                PREDATOR_REPRODUCTION_TIME,
+                Predator
+            )
 
     def find_closest_visible(self, agent, candidates):
         target = None
