@@ -25,9 +25,16 @@ def in_vision_cone(agent, target):
 
     return dot >= agent.cos_half_vision
 
-def handle_turning(agent, target):
-    dx = target.x - agent.x
-    dy = target.y - agent.y
-    dist = math.hypot(dx, dy)
-    if dist > 0:
-        agent.facing = [dx / dist, dy / dist]
+def handle_turning(agent, target, turn_towards):
+    if turn_towards == True:
+        dx = target.x - agent.x
+        dy = target.y - agent.y
+        dist = math.hypot(dx, dy)
+        if dist > 0:
+            agent.facing = [dx / dist, dy / dist]
+    else:
+        dx = agent.x - target.x
+        dy = agent.y - target.y
+        dist = math.hypot(dx, dy)
+        if dist > 0:
+            agent.facing = [dx / dist, dy / dist]

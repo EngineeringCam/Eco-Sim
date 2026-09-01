@@ -65,7 +65,7 @@ class World:
     
                 if target:
                     # turn toward target
-                    handle_turning(c, target)
+                    handle_turning(c, target, True)
                 else:
                     c.move_random()
 
@@ -86,7 +86,7 @@ class World:
 
             if target:
                 # turn toward target
-                handle_turning(c, target)
+                handle_turning(c, target, True)
             else:
                 # wander if nothing seen
                 c.move_random()
@@ -136,13 +136,7 @@ class World:
                 prey.flee_timer -= 1
 
                 # Move directly away from the predator
-                dx = prey.x - prey.flee_from.x
-                dy = prey.y - prey.flee_from.y
-
-                dist = math.hypot(dx, dy)
-
-                if dist > 0:
-                    prey.facing = [dx / dist, dy / dist]
+                handle_turning(prey, prey.flee_from, False)
 
                 continue  # Skip the rest of the loop to keep fleeing
 
