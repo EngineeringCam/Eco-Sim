@@ -124,11 +124,7 @@ class World:
                 continue  # Skip the rest of the loop to keep fleeing
 
             # If prey is not fleeing, check for predators in vision cone / Look for predators
-            aggitator = None
-
-            for predator in self.predators:
-                # Check if predator is in prey's vision cone. Check which predator in vision cone is closest
-                self.find_closest_visible(prey, predator)
+            aggitator = self.find_closest_visible(prey, self.predators)
 
             # If predator is found in vision cone, set flee timer and move away from predator
             if aggitator:
@@ -161,10 +157,10 @@ class World:
                 predator.age += 1
                 predator.reproduceTimer += 1
 
-                if self.die(predator, self.predators):
+                if die(predator, self.predators):
                     continue
 
-                self.reproduce(
+                reproduce(
                     predator,
                     self.predators,
                     PREDATOR_REPRODUCTION_AGE,
