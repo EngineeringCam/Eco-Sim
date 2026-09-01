@@ -1,7 +1,7 @@
 import random
 import pygame
 import math
-from utils import in_vision_cone, handle_turning
+from utils import eat, in_vision_cone, handle_turning, die, reproduce
 from agents import Plant, Prey, Predator
 from settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, PLANT_COUNT, PREY_COUNT, PREDATOR_COUNT, EAT_RADIUS, PLANT_ENERGY,
@@ -30,7 +30,6 @@ class World:
         self.predators = []
         self.tick_count = 0
 
-
     def populate(self):
         for _ in range(PLANT_COUNT):
             self.plants.append(Plant(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT)))
@@ -38,7 +37,6 @@ class World:
             self.prey.append(Prey(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT)))
         for _ in range(PREDATOR_COUNT):
             self.predators.append(Predator(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT)))
-
 
     def update(self):
         self.tick_count += 1
@@ -50,7 +48,6 @@ class World:
         # occasional plant regrowth
         if self.tick_count % 5 == 0:
             self.spawn_plant()
-
 
     def move_agents(self):
         #Prey move
@@ -98,35 +95,21 @@ class World:
             c.x = clamp(c.x, 0, SCREEN_WIDTH - 1)
             c.y = clamp(c.y, 0, SCREEN_HEIGHT - 1)
 
-
     def handle_eating(self):
         # Prey eat plants
         for prey in list(self.prey):
             for plant in list(self.plants):
-                dx = prey.x - plant.x
-                dy = prey.y - plant.y
-                if dx*dx + dy*dy < EAT_RADIUS * EAT_RADIUS:
-                    prey.energy += PLANT_ENERGY
-                    try:
-                        self.plants.remove(plant)
-                    except ValueError:
-                        pass
-                    break # one plant per tick
-        
+                if eat(prey, plant, self.plants, PLANT_ENERGY):
+                    break  # one plant per tick
+
         # Predators eat prey
         for predator in list(self.predators):
             for prey in list(self.prey):
-                dx = predator.x - prey.x
-                dy = predator.y - prey.y
-                if dx*dx + dy*dy < EAT_RADIUS * EAT_RADIUS:
-                    predator.energy += prey.energy // 2 # predator gains some of prey's energy
-                    try:
-                        self.prey.remove(prey)
-                    except ValueError:
-                        pass
+                energy = prey.energy // 2
+
+                if eat(predator, prey, self.prey, energy):
                     break
 
-    
     def handle_fleeing(self):
         # Prey flee from predators
         for prey in self.prey:
@@ -142,16 +125,10 @@ class World:
 
             # If prey is not fleeing, check for predators in vision cone / Look for predators
             aggitator = None
-            closest_dist = float("inf")
 
             for predator in self.predators:
-                # Check if predator is in prey's vision cone
-                if in_vision_cone(prey, predator):
-                    # Check which predator in vision cone is closest
-                    d = distance(prey, predator)
-                    if d < closest_dist:
-                        closest_dist = d
-                        aggitator = predator
+                # Check if predator is in prey's vision cone. Check which predator in vision cone is closest
+                self.find_closest_visible(prey, predator)
 
             # If predator is found in vision cone, set flee timer and move away from predator
             if aggitator:
@@ -160,49 +137,40 @@ class World:
                 prey.flee_from = aggitator
 
                 # Immediately turn away from predator
-                dx = prey.x - aggitator.x
-                dy = prey.y - aggitator.y
-
-                dist = math.hypot(dx, dy)
-
-                if dist > 0:
-                    prey.facing = [dx / dist, dy / dist]
-
+                handle_turning(prey, aggitator, False)
 
     def handle_reproduction_and_death(self):
         # Prey reproduction and death
         for prey in list(self.prey):
             prey.age += 1
             prey.reproduceTimer += 1
-            if prey.energy <= 0:
-                try:
-                    self.prey.remove(prey)
-                except ValueError:
-                    pass
-                continue
-            if prey.age >= PREY_REPRODUCTION_AGE:
-                if prey.reproduceTimer >= PREY_REPRODUCTION_TIME:
-                    prey.energy //= 2
-                    child = Prey(prey.x + random.randint(-5, 5), prey.y + random.randint(-5, 5))
-                    self.prey.append(child)
-                    prey.reproduceTimer = 0
 
-        # Predator reproduction and death
-        for predator in list(self.predators):
-            predator.age += 1
-            predator.reproduceTimer += 1
-            if predator.energy <= 0:
-                try:
-                    self.predators.remove(predator)
-                except ValueError:
-                    pass
+            if die(prey, self.prey):
                 continue
-            if predator.age >= PREDATOR_REPRODUCTION_AGE:
-                if predator.reproduceTimer >= PREDATOR_REPRODUCTION_TIME:
-                    predator.energy //= 2
-                    child = Predator(predator.x + random.randint(-5, 5), predator.y + random.randint(-5, 5))
-                    self.predators.append(child)
-                    predator.reproduceTimer = 0
+
+            reproduce(
+                prey,
+                self.prey,
+                PREY_REPRODUCTION_AGE,
+                PREY_REPRODUCTION_TIME,
+                Prey
+            )
+
+            # Predator reproduction and death
+            for predator in list(self.predators):
+                predator.age += 1
+                predator.reproduceTimer += 1
+
+                if self.die(predator, self.predators):
+                    continue
+
+                self.reproduce(
+                    predator,
+                    self.predators,
+                    PREDATOR_REPRODUCTION_AGE,
+                    PREDATOR_REPRODUCTION_TIME,
+                    Predator
+                )
 
     def find_closest_visible(self, agent, candidates):
         target = None
@@ -217,12 +185,10 @@ class World:
                     target = candidate
 
         return target
-    
 
     def spawn_plant(self):
         # add one plant at random Location
         self.plants.append(Plant(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT)))
-
 
     def draw(self, screen):
         # draw plants
