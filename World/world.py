@@ -1,7 +1,7 @@
 import random
 import pygame
 import math
-from utils import eat, in_vision_cone, handle_turning, die, reproduce
+from utils import eat, in_vision_cone, handle_turning, die, reproduce, move_at_speed
 from agents import Plant, Prey, Predator
 from settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, PLANT_COUNT, PREY_COUNT, PREDATOR_COUNT, EAT_RADIUS, PLANT_ENERGY,
@@ -49,12 +49,14 @@ class World:
         if self.tick_count % 5 == 0:
             self.spawn_plant()
 
+
     def move_agents(self):
         #Prey move
         for c in self.prey:
             if c.flee_timer > 0:
                 # already fleeing.
                 # Don't Look for food.
+                move_at_speed(c, c.sprint_speed, sprinting=True)
                 pass
             else:
     
@@ -63,18 +65,11 @@ class World:
                 if target:
                     # turn toward target
                     handle_turning(c, target, True)
+                    move_at_speed(c, c.walk_speed, sprinting=False)
                 else:
+                    # wander if nothing seen
                     c.move_random()
-
-            c.x += c.facing[0] * c.speed
-            c.y += c.facing[1] * c.speed
-
-            # pay movement cost
-            c.energy -= MOVEMENT_COST
-
-            # clamp to screen
-            c.x = clamp(c.x, 0, SCREEN_WIDTH -1)
-            c.y = clamp(c.y, 0, SCREEN_HEIGHT - 1)
+                    move_at_speed(c, c.walk_speed, sprinting=False)
 
         # Predators move
         for c in self.predators:
@@ -84,16 +79,12 @@ class World:
             if target:
                 # turn toward target
                 handle_turning(c, target, True)
+                move_at_speed(c, c.sprint_speed, sprinting=True)
             else:
                 # wander if nothing seen
                 c.move_random()
+                move_at_speed(c, c.walk_speed, sprinting=False)
 
-            c.x += c.facing[0] * c.speed
-            c.y += c.facing[1] * c.speed
-            c.energy -= MOVEMENT_COST
-
-            c.x = clamp(c.x, 0, SCREEN_WIDTH - 1)
-            c.y = clamp(c.y, 0, SCREEN_HEIGHT - 1)
 
     def handle_eating(self):
         # Prey eat plants
@@ -105,7 +96,7 @@ class World:
         # Predators eat prey
         for predator in list(self.predators):
             for prey in list(self.prey):
-                energy = prey.energy // 2
+                energy = prey.energy // 1.5
 
                 if eat(predator, prey, self.prey, energy):
                     break

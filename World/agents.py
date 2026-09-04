@@ -48,7 +48,8 @@ class Prey(Agent):
 
         self.vision_distance = 80
         self.vision_angle = 3 * math.pi / 2 # 270 degrees
-        self.speed = 2
+        self.walk_speed = 2
+        self.sprint_speed = 3
         self.flee_timer = 0
         self.flee_from = None
 
@@ -62,7 +63,8 @@ class Predator(Agent):
 
         self.vision_distance = 120
         self.vision_angle = math.pi / 3 # 60 degrees
-        self.speed = 4
+        self.walk_speed = 2
+        self.sprint_speed = 5
 
         isinstance(Agent, Predator)
         self.cos_half_vision = math.cos(self.vision_angle / 2)

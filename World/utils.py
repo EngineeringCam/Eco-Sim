@@ -1,7 +1,7 @@
 import math
 import random
 
-from settings import EAT_RADIUS
+from settings import EAT_RADIUS, SCREEN_WIDTH, SCREEN_HEIGHT, MOVEMENT_COST, SPRINT_COST
 
 def distance(a, b):
     return math.hypot(a.x - b.x, a.y - b.y)
@@ -85,3 +85,17 @@ def eat(eater, food, food_list, energy):
             return True
 
         return False
+
+def move_at_speed(agent, speed, sprinting):
+    agent.x += agent.facing[0] * speed
+    agent.y += agent.facing[1] * speed
+
+    if sprinting:
+        agent.energy -= 2 * SPRINT_COST
+    else:
+        # pay movement cost
+        agent.energy -= MOVEMENT_COST
+
+    # clamp to screen
+    agent.x = clamp(agent.x, 0, SCREEN_WIDTH - 1)
+    agent.y = clamp(agent.y, 0, SCREEN_HEIGHT - 1)
