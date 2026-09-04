@@ -2,8 +2,6 @@ import sys
 import pygame
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 from world import World
-from agents import Plant, Prey, Predator
-from utils import distance
 
 class main():
     pygame.init()

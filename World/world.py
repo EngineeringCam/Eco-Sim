@@ -3,6 +3,7 @@ import pygame
 import math
 from utils import eat, in_vision_cone, handle_turning, die, reproduce, move_at_speed
 from agents import Plant, Prey, Predator
+from terrain import Cover
 from settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, PLANT_COUNT, PREY_COUNT, PREDATOR_COUNT, EAT_RADIUS, PLANT_ENERGY,
     PREY_REPRODUCTION_AGE, PREY_REPRODUCTION_TIME, PREDATOR_REPRODUCTION_AGE, PREDATOR_REPRODUCTION_TIME,
@@ -28,6 +29,7 @@ class World:
         self.plants = []
         self.prey = []
         self.predators = []
+        self.cover = []
         self.tick_count = 0
 
     def populate(self):
@@ -37,6 +39,10 @@ class World:
             self.prey.append(Prey(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT)))
         for _ in range(PREDATOR_COUNT):
             self.predators.append(Predator(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT)))
+
+        self.cover.append(Cover(300, 200, 250, 150))
+        self.cover.append(Cover(800, 400, 300, 200))
+        self.cover.append(Cover(500, 600, 200, 100))
 
     def update(self):
         self.tick_count += 1
@@ -96,10 +102,12 @@ class World:
         # Predators eat prey
         for predator in list(self.predators):
             for prey in list(self.prey):
+                # Predator gets 75% of the prey's energy when it eats it
                 energy = prey.energy // 1.5
 
                 if eat(predator, prey, self.prey, energy):
                     break
+
 
     def handle_fleeing(self):
         # Prey flee from predators
@@ -125,6 +133,7 @@ class World:
 
                 # Immediately turn away from predator
                 handle_turning(prey, aggitator, False)
+
 
     def handle_reproduction_and_death(self):
         # Prey reproduction and death
@@ -159,12 +168,13 @@ class World:
                 Predator
             )
 
+
     def find_closest_visible(self, agent, candidates):
         target = None
         closest_dist = float("inf")
 
         for candidate in candidates:
-            if in_vision_cone(agent, candidate):
+            if in_vision_cone(agent, candidate, self.cover):
                 d = distance(agent, candidate)
 
                 if d < closest_dist:
@@ -173,9 +183,20 @@ class World:
 
         return target
 
+
+    def in_cover(self, agent):
+        for cover in self.cover:
+
+            if (cover.x <= agent.x <= cover.x + cover.width) and (cover.y <= agent.y <= cover.y + cover.height):
+                return True
+
+        return False
+
+
     def spawn_plant(self):
         # add one plant at random Location
         self.plants.append(Plant(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT)))
+
 
     def draw(self, screen):
         # draw plants
@@ -192,3 +213,12 @@ class World:
             pygame.draw.circle(screen, (200, 30, 30), (int(predator.x), int(predator.y)), 8)
             if SHOW_VISION_CONES:
                 draw_vision_cone(predator, screen)
+
+
+        # Draw cover
+        cover_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+
+        for cover in self.cover:
+            pygame.draw.rect(cover_surface, (128, 128, 128, 150), (cover.x, cover.y, cover.width, cover.height))
+
+        screen.blit(cover_surface, (0, 0))

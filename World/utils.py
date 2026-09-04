@@ -1,7 +1,9 @@
 import math
 import random
 
-from settings import EAT_RADIUS, SCREEN_WIDTH, SCREEN_HEIGHT, MOVEMENT_COST, SPRINT_COST
+from settings import (
+    EAT_RADIUS, SCREEN_WIDTH, SCREEN_HEIGHT, MOVEMENT_COST, SPRINT_COST, COVER_VISION_MULTIPLIER
+)
 
 def distance(a, b):
     return math.hypot(a.x - b.x, a.y - b.y)
@@ -9,13 +11,23 @@ def distance(a, b):
 def clamp(val, low, high):
     return max(low, min(high, val))
 
-def in_vision_cone(agent, target):
+def in_vision_cone(agent, target, cover):
+    # determine effective vision distance
+    vision_distance = agent.vision_distance
+
+    for area in cover:
+         if (area.x <= agent.x <= area.x + area.width and
+             area.y <= agent.y <= area.y + area.height):
+             vision_distance *= COVER_VISION_MULTIPLIER  # reduce vision distance by half if in cover
+             break
+
     # Vector from agent to target
     dx = target.x - agent.x
     dy = target.y - agent.y
 
     dist_sq = dx*dx + dy*dy
-    if dist_sq == 0 or dist_sq > agent.vision_distance**2:
+
+    if dist_sq == 0 or dist_sq > vision_distance**2:
         return False
     
     inv_dist = 1 / math.sqrt(dist_sq)
