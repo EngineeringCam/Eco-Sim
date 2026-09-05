@@ -193,6 +193,35 @@ class World:
         return False
 
 
+    def has_line_of_sight(self, agent, target):
+        if self.in_cover(target) and self.in_cover(agent):
+            # agents can see other agents in cover if they are also in cover
+            return True
+
+        # Check if the line between agent and target intersects any cover
+        for cover in self.cover:
+            if self.line_intersects_rect(agent.x, agent.y, target.x, target.y, cover):
+                return False  # Line of sight is blocked
+
+        return True  # No cover blocks the line of sight
+
+
+    def line_intersects_rect(self, x1, y1, x2, y2, rect):
+        # Check if the line segment from (x1, y1) to (x2, y2) intersects the rectangle defined by rect
+        rect_lines = [
+            ((rect.x, rect.y), (rect.x + rect.width, rect.y)),  # Top
+            ((rect.x, rect.y), (rect.x, rect.y + rect.height)),  # Left
+            ((rect.x + rect.width, rect.y), (rect.x + rect.width, rect.y + rect.height)),  # Right
+            ((rect.x, rect.y + rect.height), (rect.x + rect.width, rect.y + rect.height))  # Bottom
+        ]
+
+        for (rx1, ry1), (rx2, ry2) in rect_lines:
+            if self.lines_intersect(x1, y1, x2, y2, rx1, ry1, rx2, ry2):
+                return True
+
+        return False
+
+
     def spawn_plant(self):
         # add one plant at random Location
         self.plants.append(Plant(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT)))
