@@ -15,7 +15,7 @@ PREY_REPRODUCTION_TIME = 450
 PREDATOR_REPRODUCTION_AGE = 600
 PREDATOR_REPRODUCTION_TIME = 600
 
-COVER_VISION_MULTIPLIER = 0.25  # reduces vision distance when in cover
+COVER_VISION_MULTIPLIER = 0.35  # reduces vision distance when in cover
 
 FLEE_TIMER = 60  # number of ticks to flee
 

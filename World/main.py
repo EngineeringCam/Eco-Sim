@@ -22,7 +22,7 @@ class main():
                 running = False
             # add simple key controls (optional)
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.k_r:
+                if event.key == pygame.K_r:
                     # reset
                     world = World()
                     world.populate()

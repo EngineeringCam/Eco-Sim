@@ -174,12 +174,13 @@ class World:
         closest_dist = float("inf")
 
         for candidate in candidates:
-            if in_vision_cone(agent, candidate, self.cover):
-                d = distance(agent, candidate)
+            if in_vision_cone(agent, candidate, self.cover): # Check if the agent is in the vision cone of the candidate
+                if self.has_line_of_sight(agent, candidate): # Check if the agent has line of sight to the candidate
+                    d = distance(agent, candidate)
 
-                if d < closest_dist:
-                    closest_dist = d
-                    target = candidate
+                    if d < closest_dist:
+                        closest_dist = d
+                        target = candidate
 
         return target
 
@@ -196,6 +197,10 @@ class World:
     def has_line_of_sight(self, agent, target):
         if self.in_cover(target) and self.in_cover(agent):
             # agents can see other agents in cover if they are also in cover
+            return True
+
+        if not self.in_cover(target) and self.in_cover(agent):
+            # agents in cover can see agents that are not in cover, but agents not in cover cannot see agents in cover
             return True
 
         # Check if the line between agent and target intersects any cover
@@ -220,6 +225,13 @@ class World:
                 return True
 
         return False
+
+    def lines_intersect(self, x1, y1, x2, y2, x3, y3, x4, y4):
+        # Check if line segments (x1, y1)-(x2, y2) and (x3, y3)-(x4, y4) intersect
+        def ccw(ax, ay, bx, by, cx, cy):
+            return (cy - ay) * (bx - ax) > (by - ay) * (cx - ax)
+
+        return (ccw(x1, y1, x3, y3, x4, y4) != ccw(x2, y2, x3, y3, x4, y4)) and (ccw(x1, y1, x2, y2, x3, y3) != ccw(x1, y1, x2, y2, x4, y4))
 
 
     def spawn_plant(self):
