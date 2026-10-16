@@ -1,13 +1,21 @@
 import random
 import math
-from settings import PREDATOR_REPRODUCTION_TIME, PREY_ENERGY_START, PREDATOR_ENERGY_START, PREY_REPRODUCTION_TIME
+from settings import PREDATOR_REPRODUCTION_TIME, PREY_ENERGY_START, PREDATOR_ENERGY_START, PREY_REPRODUCTION_TIME, MIN_REPRO_TIME, MAX_REPRO_TIME
 
 class Agent:
-    def __init__(self, x, y, age, reproduceTimer):
+    def __init__(self, x, y, age, reproduceTimer, reproduction_mean=None):
         self.x = x
         self.y = y
         self.age = age
         self.reproduceTimer = reproduceTimer
+
+        # Each species has its own average reproduction time
+        self.reproduction_mean = reproduction_mean
+
+        # Randomly assigned reproduction target
+        self.reproTime = None
+        if reproduction_mean is not None:
+            self.reset_repro_time()
 
         # facing direction (unit vector)
         angle = random.uniform(0, 2 * math.pi)
@@ -18,6 +26,26 @@ class Agent:
         self.vision_angle = math.pi / 2 # 90 degrees
 
         self.speed = 3
+
+    def reset_repro_time(self):
+        minimum = MIN_REPRO_TIME
+        maximum = MAX_REPRO_TIME
+        mean = self.reproduction_mean
+
+        if mean is None:
+            raise ValueError("Agent has no reproduction mean")
+
+        if not minimum <= mean <= maximum:
+            raise ValueError("Reproduction mean must be between minimum and maximum")
+
+        # Calculate the mode for the desired average
+        mode = 3 * mean - minimum - maximum
+
+        if not minimum <= mode <= maximum:
+            raise ValueError("Reproduction mean is incompatible with the triangular distribution bounds")
+
+        self.reproTime = round(random.triangular(minimum, maximum, mode))
+        self.reproduceTimer = 0
 
     def move_random(self):
         # small random steering instead of full random walk
@@ -43,7 +71,7 @@ class Plant(Agent):
 
 class Prey(Agent):
     def __init__(self, x, y):
-        super().__init__(x, y, age=0, reproduceTimer=0)
+        super().__init__(x, y, age=0, reproduceTimer=0, reproduction_mean=PREY_REPRODUCTION_TIME)
         self.energy = PREY_ENERGY_START
 
         self.vision_distance = 80
@@ -58,7 +86,7 @@ class Prey(Agent):
 
 class Predator(Agent):
     def __init__(self, x, y):
-        super().__init__(x, y, age=0, reproduceTimer=0)
+        super().__init__(x, y, age=0, reproduceTimer=0, reproduction_mean=PREDATOR_REPRODUCTION_TIME)
         self.energy = PREDATOR_ENERGY_START
 
         self.vision_distance = 120

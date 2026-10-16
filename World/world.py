@@ -135,38 +135,45 @@ class World:
                 handle_turning(prey, aggitator, False)
 
 
+    
     def handle_reproduction_and_death(self):
+    
         # Prey reproduction and death
         for prey in list(self.prey):
             prey.age += 1
-            prey.reproduceTimer += 1
     
             if die(prey, self.prey):
                 continue
             
-            reproduce(
-                prey,
-                self.prey,
-                PREY_REPRODUCTION_AGE,
-                PREY_REPRODUCTION_TIME,
-                Prey
-            )
+            # Only start reproduction timer after maturity
+            if prey.age >= PREY_REPRODUCTION_AGE:
+                prey.reproduceTimer += 1
+    
+                reproduce(
+                    prey,
+                    self.prey,
+                    PREY_REPRODUCTION_AGE,
+                    Prey
+                )
     
         # Predator reproduction and death
         for predator in list(self.predators):
             predator.age += 1
-            predator.reproduceTimer += 1
     
             if die(predator, self.predators):
                 continue
             
-            reproduce(
-                predator,
-                self.predators,
-                PREDATOR_REPRODUCTION_AGE,
-                PREDATOR_REPRODUCTION_TIME,
-                Predator
-            )
+            # Only start reproduction timer after maturity
+            if predator.age >= PREDATOR_REPRODUCTION_AGE:
+                predator.reproduceTimer += 1
+    
+                reproduce(
+                    predator,
+                    self.predators,
+                    PREDATOR_REPRODUCTION_AGE,
+                    Predator
+                )
+
 
 
     def find_closest_visible(self, agent, candidates):

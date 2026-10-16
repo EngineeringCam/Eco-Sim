@@ -55,48 +55,58 @@ def handle_turning(agent, target, turn_towards):
             agent.facing = [dx / dist, dy / dist]
 
 def die(agent, agent_list):
-        if agent.energy <= 0:
-            try:
-                agent_list.remove(agent)
-            except ValueError:
-                pass
-            return True
-        
+    if agent.energy <= 0:
+        try:
+            agent_list.remove(agent)
+        except ValueError:
+            pass
+        return True
+    
+    return False
+
+
+def reproduce(agent, agent_list, reproduction_age, agent_class):
+
+    # Agent must be old enough to reproduce
+    if agent.age < reproduction_age:
         return False
 
-def reproduce(agent, agent_list, reproduction_age, reproduction_time, agent_class):
-        if agent.age >= reproduction_age:
-            if agent.reproduceTimer >= reproduction_time:
+    # Wait until the reproduction timer reaches its target
+    if agent.reproduceTimer < agent.reproTime:
+        return False
 
-                # Take half of the parent's energy
-                agent.energy //= 2
+    # Take half of the parent's energy
+    agent.energy //= 2
 
-                # Create the child near the parent
-                child = agent_class(
-                    agent.x + random.randint(-5, 5),
-                    agent.y + random.randint(-5, 5)
-                )
+    # Create the child near the parent
+    child = agent_class(
+        agent.x + random.randint(-5, 5),
+        agent.y + random.randint(-5, 5)
+    )
 
-                agent_list.append(child)
+    agent_list.append(child)
 
-                # Reset reproduction timer
-                agent.reproduceTimer = 0
+    # Generate another reproduction time and reset timer
+    agent.reset_repro_time()
+
+    return True
+
 
 def eat(eater, food, food_list, energy):
-        dx = eater.x - food.x
-        dy = eater.y - food.y
+    dx = eater.x - food.x
+    dy = eater.y - food.y
 
-        if dx * dx + dy * dy < EAT_RADIUS * EAT_RADIUS:
-            eater.energy += energy
+    if dx * dx + dy * dy < EAT_RADIUS * EAT_RADIUS:
+        eater.energy += energy
 
-            try:
-                food_list.remove(food)
-            except ValueError:
-                pass
+        try:
+            food_list.remove(food)
+        except ValueError:
+            pass
 
-            return True
+        return True
 
-        return False
+    return False
 
 def move_at_speed(agent, speed, sprinting):
     agent.x += agent.facing[0] * speed
